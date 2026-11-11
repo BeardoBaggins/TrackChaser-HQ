@@ -143,8 +143,6 @@ ICONIC_RACE_NOTES = {
     "championship": (True, "BUCKET LIST: Season Championship Finale on Homestead-Miami's multi-groove 1.5-mile oval | Tix: $95-$260 | Pre-Race & Stage Celebration Pass: $125"),
 }
 
-# -------------------- QUESTS & CHALLENGES MASTER CATALOG --------------------
-
 AUTO_CAMPAIGNS = [
     {
         "id": "camp_grand_slam",
@@ -314,7 +312,6 @@ FOOD_CHALLENGES = [
     ("food_illinois_mile", "State Fair Cozy Dog & Lemon Shake-Up", "Springfield / DuQuoin Dirt Miles", "Get a fresh-squeezed lemon shake-up and a Route 66 Cozy Dog while ARCA cars fling clay.", 100),
 ]
 
-# Meaningful, track-specific fan traditions & landmarks ("Side-Tracked")
 SIDE_TRACKED_QUESTS = [
     ("sq_indy", "Kiss the Yard of Bricks", "Indianapolis Motor Speedway", "Kneel down on the frontstretch and kiss (or touch) the original 36-inch strip of 1909 paving bricks at the start/finish line.", 100),
     ("sq_daytona_sign", "Sign the Daytona Start/Finish Line & Walk the 31° Banks", "Daytona International Speedway", "Use the Hard Rock Bet Fanzone & Pre-Race pass to walk onto the tri-oval grass, sign the start/finish line, and stand at the bottom of the 31-degree banking.", 100),
@@ -394,7 +391,6 @@ def normalize_track_key(track_name):
 
 
 def get_item_attended_years(item):
-    """Returns a sorted list of 4-digit year strings (e.g. ['2026']) when this race was attended."""
     yrs = item.get("attended_years", [])
     if isinstance(yrs, list) and yrs:
         return sorted(list({str(y).strip() for y in yrs if str(y).strip()}))
@@ -902,7 +898,6 @@ class NASCARTrackerApp:
         self.refresh_all_tables()
 
     def get_active_season_year_for_series(self, series_key):
-        """Determines which season year to stamp when a race is marked Attended."""
         sel = getattr(self, "year_var", None)
         sel_val = sel.get() if sel else "Season"
         if sel_val in ("2025", "2026", "2027"):
@@ -910,8 +905,6 @@ class NASCARTrackerApp:
         if series_key in ("ARCA_National", "ARCA_East", "ARCA_West"):
             return "2027"
         return "2026"
-
-    # -------------------- APP ICON & TOP HERO BANNER GENERATOR --------------------
 
     def generate_app_icon(self):
         if not HAS_PIL:
@@ -1062,8 +1055,6 @@ class NASCARTrackerApp:
         d.rectangle([11, 36, 33, 39], fill=cup_edge)
         return img
 
-    # -------------------- DATA & STORAGE --------------------
-
     def load_geo_cache(self):
         if os.path.exists(GEO_CACHE_FILE):
             try:
@@ -1162,17 +1153,7 @@ class NASCARTrackerApp:
             json.dump(self.data, f, indent=4)
         self.update_stats()
 
-    # -------------------- SAME-YEAR WEEKEND SWEEP & UNIQUE TRACKS ENGINE --------------------
-
     def compute_weekend_sweeps_and_tracks(self):
-        """
-        1. Unique Tracks Conquered: Counts any track where you attended a race in ANY year.
-        2. Weekend Sweeps Conquered: Groups national series races at the same track within a 5-day window.
-           A Weekend Sweep is ONLY awarded if every race in that weekend cluster was attended in the
-           EXACT SAME YEAR (e.g., watching 2026 Bristol Trucks/ARCA and 2027 Bristol O'Reilly/Cup
-           counts toward Unique Tracks, but does NOT award a Weekend Sweep until all races in the
-           weekend share a common attended year).
-        """
         all_tracks = set()
         attended_tracks = set(self.data.get("CompletedTracksHistory", []))
 
@@ -1210,7 +1191,6 @@ class NASCARTrackerApp:
 
             for cluster in clusters:
                 total_weekends += 1
-                # Intersect attended_years across every single race in this weekend cluster
                 year_sets = [set(get_item_attended_years(item[1])) for item in cluster]
                 common_years = sorted(list(set.intersection(*year_sets))) if year_sets else []
                 if common_years:
@@ -1220,8 +1200,6 @@ class NASCARTrackerApp:
                         ev["_weekend_swept_years"] = common_years
 
         return conquered_weekends, total_weekends, len(attended_tracks), len(all_tracks)
-
-    # -------------------- QUESTS & CHALLENGES EVALUATION ENGINE --------------------
 
     def evaluate_auto_campaign(self, camp, swept_wknds, vis_tracks):
         ctype = camp["type"]
@@ -1288,8 +1266,6 @@ class NASCARTrackerApp:
         if xp >= 300:
             return "🎟️ SHORT-TRACK CONTENDER"
         return "🟢 ROOKIE STRIPE CHASER"
-
-    # -------------------- USER CUSTOM RACE & TRACK LOGO ENGINE --------------------
 
     def find_custom_logo_file(self, name_str):
         if not name_str or not os.path.exists(CUSTOM_LOGO_DIR):
@@ -1448,12 +1424,10 @@ class NASCARTrackerApp:
     def build_ui(self):
         self.stats_var = tk.StringVar()
 
-        # ROW 1: Top Motorsport Hero Banner
         self.banner_canvas = tk.Canvas(self.root, height=68, bd=0, highlightthickness=0, bg="#090d16")
         self.banner_canvas.pack(fill="x", padx=10, pady=(8, 4))
         self.banner_canvas.bind("<Configure>", self.draw_top_banner)
 
-        # ROW 2: Home Address + Season Dropdown, Sync, Reset, Refresh Logos & custom_logos Folder
         self.action_bar = tk.Frame(self.root, pady=5, padx=12)
         self.action_bar.pack(fill="x", padx=10, pady=(0, 3))
 
@@ -1496,7 +1470,6 @@ class NASCARTrackerApp:
         self.dist_status_lbl = tk.Label(self.action_bar, textvariable=self.dist_status_var, font=(APP_FONT, 9, "bold"), anchor="w")
         self.dist_status_lbl.pack(side="left", fill="x", expand=True, padx=6)
 
-        # ROW 3: Live Filter & Sort Bar
         self.filter_bar = tk.Frame(self.root, pady=5, padx=12)
         self.filter_bar.pack(fill="x", padx=10, pady=(0, 5))
         self.filter_labels = []
@@ -1553,7 +1526,6 @@ class NASCARTrackerApp:
 
         self.make_flat_button(self.filter_bar, "Clear Filters", "#475569", cmd=clear_filters, pad_x=8, pad_y=2).pack(side="left", padx=6)
 
-        # ROW 4: 9-Column Responsive Color-Coded Tab Bar
         self.tab_strip = tk.Frame(self.root)
         self.tab_strip.pack(fill="x", padx=10, pady=(2, 0))
 
@@ -1591,8 +1563,6 @@ class NASCARTrackerApp:
         self.tab_frames["Bucket"] = self.build_bucket_list_view(self.content_area)
         self.tab_frames["Quests"] = self.build_quests_view(self.content_area)
         self.tab_frames["Trip"] = self.build_trip_view(self.content_area)
-
-    # -------------------- QUESTS, TRACK FOOD CHALLENGES & "SIDE-TRACKED" VIEW --------------------
 
     def build_quests_view(self, parent):
         container = tk.Frame(parent, bg="#0f172a")
@@ -1639,7 +1609,6 @@ class NASCARTrackerApp:
         body = tk.Frame(container)
         body.pack(side="top", fill="both", expand=True)
 
-        # 1. Auto-Tracked Campaigns Sub-View
         camp_frame = tk.Frame(body)
         camp_cols = [
             {"key": "event", "title": "Campaign Quest Name", "weight": 22, "min_w": 210, "align": "center"},
@@ -1653,7 +1622,6 @@ class NASCARTrackerApp:
         self.tables["Quest_Campaigns"].pack(fill="both", expand=True)
         self.quest_sub_frames["Quest_Campaigns"] = camp_frame
 
-        # 2. Dedicated Track Food Challenges Sub-View
         food_frame = tk.Frame(body)
         food_cols = [
             {"key": "event", "title": "Signature Track Food Item", "weight": 21, "min_w": 200, "align": "center"},
@@ -1670,7 +1638,6 @@ class NASCARTrackerApp:
         self.tables["Quest_Food"].pack(fill="both", expand=True)
         self.quest_sub_frames["Quest_Food"] = food_frame
 
-        # 3. "Side-Tracked" Track Traditions Sub-View (+ Add Custom Side-Tracked Goal)
         silly_frame = tk.Frame(body)
         add_sq_bar = tk.Frame(silly_frame, bg="#0f172a", pady=6, padx=10)
         add_sq_bar.pack(side="bottom", fill="x")
@@ -1768,7 +1735,6 @@ class NASCARTrackerApp:
         swept_wknds, _, vis_tracks, _ = self.compute_weekend_sweeps_and_tracks()
         total_xp = 0
 
-        # 1. Auto Campaigns
         camp_rows = []
         camp_done_count = 0
         for idx, camp in enumerate(AUTO_CAMPAIGNS):
@@ -1789,7 +1755,6 @@ class NASCARTrackerApp:
             })
         self.tables["Quest_Campaigns"].set_rows(camp_rows)
 
-        # 2. Food Challenges
         f_map = self.data.get("QuestProgress", {}).get("food", {})
         food_rows = []
         food_done_count = 0
@@ -1810,7 +1775,6 @@ class NASCARTrackerApp:
             })
         self.tables["Quest_Food"].set_rows(food_rows)
 
-        # 3. "Side-Tracked" Track Traditions (+ Custom Side-Tracked)
         s_map = self.data.get("QuestProgress", {}).get("side_quests", {})
         silly_rows = []
         silly_done_count = 0
@@ -1857,8 +1821,6 @@ class NASCARTrackerApp:
             f"Food Challenges: {food_done_count}/{len(FOOD_CHALLENGES)}  •  "
             f"Side-Tracked: {silly_done_count}/{len(silly_rows)}"
         )
-
-    # -------------------- POPOUT NOTES & RACE MEMORY LOG DIALOG (WITH YEAR EDITOR) --------------------
 
     def open_notes_popup(self, key, real_idx=None):
         tbl = self.tables[key]
@@ -1952,8 +1914,6 @@ class NASCARTrackerApp:
         self.make_flat_button(btn_bar, "Save Log & Notes", "#16a34a", cmd=save_and_close, pad_x=14, pad_y=6).pack(side="right", padx=4)
         self.make_flat_button(btn_bar, "Cancel", "#64748b", cmd=win.destroy, pad_x=14, pad_y=6).pack(side="right", padx=4)
 
-    # -------------------- FILTER & SORT PIPELINE --------------------
-
     def apply_filters_and_sort(self, rows):
         st_filter = self.filter_state_var.get()
         dist_filter = self.filter_dist_var.get()
@@ -2038,7 +1998,7 @@ class NASCARTrackerApp:
 
         self.arca_sub_frames = {}
         sub_defs = [
-            ("ARCA_National", "National Series (2027)"),
+            ("ARCA_National", "National Series"),
             ("ARCA_East", "East Series"),
             ("ARCA_West", "West Series")
         ]
@@ -2306,8 +2266,6 @@ class NASCARTrackerApp:
         self.make_flat_button(ctrl, "Google Maps Directions", "#059669", cmd=self.open_maps_from_bucket).pack(side="left", padx=4)
         self.make_flat_button(ctrl, "+ Add to Trip Planner", "#7c3aed", cmd=self.add_bucket_to_trip).pack(side="left", padx=4)
         return frame
-
-    # -------------------- TRIP & BUDGET PLANNER VIEW --------------------
 
     def build_trip_view(self, parent):
         frame = tk.Frame(parent)
@@ -2652,8 +2610,6 @@ class NASCARTrackerApp:
         self.save_data()
         self.refresh_trip_table()
 
-    # -------------------- TABLE REFRESHERS --------------------
-
     def refresh_race_table(self, key):
         raw_rows = []
         for idx, ev in enumerate(self.data.get(key, [])):
@@ -2836,8 +2792,6 @@ class NASCARTrackerApp:
         if "Trip" in self.tables:
             self.refresh_trip_table()
 
-    # -------------------- YEAR-LOCKED FLAG & TROPHY HANDLERS --------------------
-
     def _toggle_event_attendance_with_year(self, item, series_key):
         active_yr = str(item.get("season_year") or self.get_active_season_year_for_series(series_key))
         yrs = get_item_attended_years(item)
@@ -2920,8 +2874,6 @@ class NASCARTrackerApp:
         self.data[src_key][item_idx]["bucket_list"] = False
         self.save_data()
         self.refresh_all_tables()
-
-    # -------------------- GOOGLE MAPS & ROUND-TRIP ROUTING --------------------
 
     def open_maps_url(self, destination_address):
         home = self.home_var.get().strip()
@@ -3033,8 +2985,6 @@ class NASCARTrackerApp:
         del self.data["Trip"][real_idx]
         self.save_data()
         self.refresh_trip_table()
-
-    # -------------------- MULTI-PROVIDER DISTANCE GEOCODER --------------------
 
     def geocode_address(self, query_str):
         q = query_str.strip()
@@ -3233,9 +3183,57 @@ class NASCARTrackerApp:
         self.refresh_all_tables()
         self.dist_status_var.set(f"Distances & Round-Trip Planner updated from {self.home_var.get().strip()}!")
 
-    # -------------------- LIVE SCHEDULE SYNCS (PRESERVING ATTENDED YEARS) --------------------
+    def load_builtin_2026_arca_schedule(self):
+        if not os.path.exists(DEFAULT_FILE):
+            messagebox.showerror("Missing File", f"Could not find {DEFAULT_FILE}.")
+            return
+        with open(DEFAULT_FILE, "r", encoding="utf-8") as f:
+            defaults = json.load(f)
+
+        mapping = {
+            "ARCA_National": "ARCA_National_2026",
+            "ARCA_East": "ARCA_East_2026",
+            "ARCA_West": "ARCA_West_2026",
+        }
+        summary = []
+        for app_key, backup_key in mapping.items():
+            if backup_key in defaults:
+                old_lookup = {
+                    (r.get("race", "").lower(), r.get("track", "").lower()): r
+                    for r in self.data.get(app_key, [])
+                }
+                merged = []
+                for ev in defaults[backup_key]:
+                    prev = old_lookup.get((ev["race"].lower(), ev["track"].lower()), {})
+                    prev_yrs = get_item_attended_years(prev)
+                    merged.append({
+                        "date": ev["date"],
+                        "season_year": "2026",
+                        "race": ev["race"],
+                        "track": ev["track"],
+                        "address": ev.get("address") or lookup_track_address(ev["track"]),
+                        "distance": prev.get("distance", "—"),
+                        "attended": "2026" in prev_yrs or bool(prev.get("attended")),
+                        "attended_years": prev_yrs if prev_yrs else (["2026"] if prev.get("attended") else []),
+                        "bucket_list": prev.get("bucket_list", ev.get("bucket_list", False)),
+                        "winner": prev.get("winner", ""),
+                        "seat": prev.get("seat", ""),
+                        "rating": prev.get("rating", "Unrated"),
+                        "notes": prev.get("notes", ev.get("notes", ""))
+                    })
+                self.data[app_key] = merged
+                summary.append(f"{app_key}: {len(merged)} races (2026 Backup)")
+
+        self.save_data()
+        self.refresh_all_tables()
+        messagebox.showinfo("2026 ARCA Loaded", "\n".join(summary))
 
     def sync_from_arca_web(self):
+        year = self.year_var.get()
+        if year == "2026":
+            self.load_builtin_2026_arca_schedule()
+            return
+
         urls = {
             "ARCA_National": "https://www.arcaracing.com/arca-menards-series/",
             "ARCA_East": "https://www.arcaracing.com/arca-menards-series-east/",
